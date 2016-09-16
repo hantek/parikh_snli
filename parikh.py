@@ -14,8 +14,7 @@ import lasagne
 from lasagne.layers.recurrent import Gate
 from lasagne import init, nonlinearities
 
-from util_layers import (DenseLayer3DInput, ApplyAttention,
-                         ComputeEmbeddingPool, AttendOnEmbedding, MeanOverDim)
+from util_layers import (DenseLayer3DInput, ComputeEmbeddingPool, AttendOnEmbedding, MeanOverDim)
 from dataset import SNLI
 
 import pdb
@@ -64,29 +63,6 @@ def main(num_epochs=NEPOCH):
     del snli
 
     print("Building network ...")
-    ########### sentence embedding encoder ###########
-    """
-    # sentence vector, with each number standing for a word number
-    input_var = T.TensorType('int32', [False, False])('sentence_vector')
-    input_var.tag.test_value = numpy.hstack((numpy.random.randint(1, 10000, (BSIZE, 20), 'int32'),
-                                             numpy.zeros((BSIZE, 5)).astype('int32')))
-    input_var.tag.test_value[1, 20:22] = (413, 45)
-    l_in = lasagne.layers.InputLayer(shape=(BSIZE, None), input_var=input_var)
-    
-    input_mask = T.TensorType('int32', [False, False])('sentence_mask')
-    input_mask.tag.test_value = numpy.hstack((numpy.ones((BSIZE, 20), dtype='int32'),
-                                             numpy.zeros((BSIZE, 5), dtype='int32')))
-    input_mask.tag.test_value[1, 20:22] = 1
-    l_mask = lasagne.layers.InputLayer(shape=(BSIZE, None), input_var=input_mask)
-
-    # output shape (BSIZE, None, WEDIM)
-    l_word_embed = lasagne.layers.EmbeddingLayer(
-        l_in,
-        input_size=W_word_embedding.shape[0],
-        output_size=W_word_embedding.shape[1],
-        W=W_word_embedding)
-    """
-
     ########### input layers ###########
     # hypothesis
     input_var_h = T.TensorType('int32', [False, False])('hypothesis_vector')
