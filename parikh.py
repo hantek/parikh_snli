@@ -21,7 +21,7 @@ import pdb
 # from theano.compile.nanguardmode import NanGuardMode
 theano.config.compute_test_value = 'off'  # 'off' # Use 'warn' to activate this feature
 
-
+WEMAP = int (sys.argv[1])           # 200 Map the word embedding to this dimension.
 EMBDHIDA = int(sys.argv[1])         # 200
 EMBDHIDB = int(sys.argv[2])         # 200
 COMPHIDA = int(sys.argv[3])         # 200
@@ -34,6 +34,7 @@ BSIZE = int(sys.argv[9])            # 4 Minibatch size
 NEPOCH = int(sys.argv[10])          # 12 Number of epochs to train the net
 UPDATEWE = bool(int(sys.argv[11]))  # 1 0 for False and 1 for True. Update word embedding in training
 filename = __file__.split('.')[0] + \
+           '_WEMAP' + str(WEMAP) + \
            '_EMBDHIDA' + str(EMBDHIDA) + \
            '_EMBDHIDB' + str(EMBDHIDB) + \
            '_COMPHIDA' + str(COMPHIDA) + \
@@ -54,6 +55,7 @@ def main(num_epochs=NEPOCH):
     dev_batches = list(snli.dev_minibatch_generator())
     test_batches = list(snli.test_minibatch_generator())
     W_word_embedding = snli.weight  # W shape: (# vocab size, WE_DIM)
+    W_word_embedding = W_word_embedding / numpy.linalg.norm(W_word_embedding, axis=1)
     del snli
 
     print("Building network ...")
@@ -96,6 +98,12 @@ def main(num_epochs=NEPOCH):
         output_size=W_word_embedding.shape[1],
         W=l_hypo_embed.W)
 
+    # output shape (BSIZE, None, WEMAP)
+    l_hypo_embed = DenseLayer3DInput(
+        l_hypo_embed, num_units=WEMAP, nonlinearity=None)
+    l_prem_embed = DenseLayer3DInput(
+        l_prem_embed, num_units=WEMAP, W=l_hypo_embed.W, b=l_hypo_embed.b, nonlinearity=None)
+
     # ATTEND
     l_hypo_embed_dpout = lasagne.layers.DropoutLayer(l_hypo_embed, p=DPOUT, rescale=True)
     l_hypo_embed_hid1 = DenseLayer3DInput(
@@ -106,10 +114,12 @@ def main(num_epochs=NEPOCH):
 
     l_prem_embed_dpout = lasagne.layers.DropoutLayer(l_prem_embed, p=DPOUT, rescale=True)
     l_prem_embed_hid1 = DenseLayer3DInput(
-        l_prem_embed_dpout, num_units=EMBDHIDA, nonlinearity=lasagne.nonlinearities.rectify)
+        l_prem_embed_dpout, num_units=EMBDHIDA, W=l_hypo_embed_hid1.W, b=l_hypo_embed_hid1.b,
+        nonlinearity=lasagne.nonlinearities.rectify)
     l_prem_embed_hid1_dpout = lasagne.layers.DropoutLayer(l_prem_embed_hid1, p=DPOUT, rescale=True)
     l_prem_embed_hid2 = DenseLayer3DInput(
-        l_prem_embed_hid1_dpout, num_units=EMBDHIDB, nonlinearity=lasagne.nonlinearities.rectify)
+        l_prem_embed_hid1_dpout, num_units=EMBDHIDB, W=l_hypo_embed_hid2.W, b=l_hypo_embed_hid2.b,
+        nonlinearity=lasagne.nonlinearities.rectify)
     
     # output dim: (BSIZE, NROWx, NROWy)
     l_e = ComputeEmbeddingPool([l_hypo_embed_hid1, l_prem_embed_hid2])
@@ -133,12 +143,12 @@ def main(num_epochs=NEPOCH):
 
     l_prem_hypowtd_dpout = lasagne.layers.DropoutLayer(l_prem_hypowtd, p=DPOUT, rescale=True)
     l_prem_comphid1 = DenseLayer3DInput(
-        l_prem_hypowtd_dpout, num_units=COMPHIDA,
-        W=l_hypo_comphid1.W, b=l_hypo_comphid1.b, nonlinearity=lasagne.nonlinearities.rectify)
+        l_prem_hypowtd_dpout, num_units=COMPHIDA, W=l_hypo_comphid1.W, b=l_hypo_comphid1.b,
+        nonlinearity=lasagne.nonlinearities.rectify)
     l_prem_comphid1_dpout = lasagne.layers.DropoutLayer(l_prem_comphid1, p=DPOUT, rescale=True)
     l_prem_comphid2 = DenseLayer3DInput(
-        l_prem_comphid1_dpout, num_units=COMPHIDB,
-        W=l_hypo_comphid2.W, b=l_hypo_comphid2.b, nonlinearity=lasagne.nonlinearities.rectify)
+        l_prem_comphid1_dpout, num_units=COMPHIDB, W=l_hypo_comphid2.W, b=l_hypo_comphid2.b,
+        nonlinearity=lasagne.nonlinearities.rectify)
 
     # AGGREGATE
     # output dim: (BSIZE, 4*LSTMHID)
@@ -146,14 +156,18 @@ def main(num_epochs=NEPOCH):
     l_prem_mean = MeanOverDim(l_prem_comphid2, mask=l_mask_p, dim=1)
 
     l_v1v2 = lasagne.layers.ConcatLayer([l_hypo_mean, l_prem_mean], axis=1)
-
     l_v1v2_dpout = lasagne.layers.DropoutLayer(l_v1v2, p=DPOUT, rescale=True)
-    l_outhid = lasagne.layers.DenseLayer(
+    
+    l_outhid1 = lasagne.layers.DenseLayer(
         l_v1v2_dpout, num_units=OUTHID, nonlinearity=lasagne.nonlinearities.rectify)
+    l_outhid1_dpout = lasagne.layers.DropoutLayer(l_outhid1, p=DPOUT, rescale=True)
+    
+    l_outhid2 = lasagne.layers.DenseLayer(
+        l_outhid1_dpout, num_units=OUTHID, nonlinearity=lasagne.nonlinearities.rectify)
+    # l_outhid2_dpout = lasagne.layers.DropoutLayer(l_outhid2, p=DPOUT, rescale=True)
 
-    l_outhid_dpout = lasagne.layers.DropoutLayer(l_outhid, p=DPOUT, rescale=True)
     l_output = lasagne.layers.DenseLayer(
-        l_outhid_dpout, num_units=3, nonlinearity=lasagne.nonlinearities.softmax)
+        l_outhid2, num_units=3, nonlinearity=lasagne.nonlinearities.softmax)
 
 
     ########### target, cost, validation, etc. ##########
