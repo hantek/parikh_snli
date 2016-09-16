@@ -27,29 +27,23 @@ EMBDHIDB = int(sys.argv[2])         # 200
 COMPHIDA = int(sys.argv[3])         # 200
 COMPHIDB = int(sys.argv[4])         # 200
 OUTHID = int(sys.argv[5])           # 200 Hidden unit numbers in output MLP
-NROW = int(sys.argv[6])             # 20 Number of rows in matrix representation
-DPOUT = float(sys.argv[7])          # 0.2 
-LR = float(sys.argv[8])             # 0.01
-WEDIM = int(sys.argv[9])            # 300 Dim of word embedding
-BSIZE = int(sys.argv[10])           # 50 Minibatch size
-GCLIP = int(sys.argv[11])           # 100 All gradients above this will be clipped
-NEPOCH = int(sys.argv[12])          # 12 Number of epochs to train the net
-STD = float(sys.argv[13])           # 0.1 Standard deviation of weights in initialization
-UPDATEWE = bool(int(sys.argv[14]))  # 1 0 for False and 1 for True. Update word embedding in training
+DPOUT = float(sys.argv[6])          # 0.2 
+LR = float(sys.argv[7])             # 0.05
+WEDIM = int(sys.argv[8])            # 300 Dim of word embedding
+BSIZE = int(sys.argv[9])            # 4 Minibatch size
+NEPOCH = int(sys.argv[10])          # 12 Number of epochs to train the net
+UPDATEWE = bool(int(sys.argv[11]))  # 1 0 for False and 1 for True. Update word embedding in training
 filename = __file__.split('.')[0] + \
            '_EMBDHIDA' + str(EMBDHIDA) + \
            '_EMBDHIDB' + str(EMBDHIDB) + \
            '_COMPHIDA' + str(COMPHIDA) + \
            '_COMPHIDB' + str(COMPHIDB) + \
            '_OUTHID' + str(OUTHID) + \
-           '_NROW' + str(NROW) + \
            '_DPOUT' + str(DPOUT) + \
            '_LR' + str(LR) + \
            '_WEDIM' + str(WEDIM) + \
            '_BSIZE' + str(BSIZE) + \
-           '_GCLIP' + str(GCLIP) + \
            '_NEPOCH' + str(NEPOCH) + \
-           '_STD' + str(STD) + \
            '_UPDATEWE' + str(UPDATEWE)
 
 
