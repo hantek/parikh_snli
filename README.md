@@ -2,7 +2,7 @@
 
 This repo tries to reproduce Parikh's decomposable attention model described in this paper:
 
-[https://arxiv.org/abs/1606.01933v1](https://arxiv.org/abs/1606.01933v1)
+[A Decomposable Attention Model for Natural Language Inference(https://arxiv.org/abs/1606.01933v1)](https://arxiv.org/abs/1606.01933v1)
 
 To run the code, you will need Theano and Lasagne to be installed in your
 computer. You will also need the trained GloVe word embedding (we are using the

@@ -52,9 +52,6 @@ class DenseLayer3DInput(Layer):
         return (input_shape[0], input_shape[1], self.num_units)
 
     def get_output_for(self, input, **kwargs):
-        
-        # pdb.set_trace()
-
         activation = T.dot(input, self.W)
         if self.b is not None:
             activation = activation + self.b.dimshuffle('x', 'x', 0)
